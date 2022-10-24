@@ -2,23 +2,25 @@ import Image from 'next/image'
 import React from 'react'
 // Components
 import FormInput from './FormInput'
-import OptionsDivider from './OptionsDivider'
 import Button from './Button'
+import OptionsDivider from './OptionsDivider'
 // Assets
 import googleLogo from '../assets/google.png'
 
-const LoginForm = () => {
+const RegisterForm = () => {
     return (
         <form className='w-full space-y-4'>
-            <FormInput label='Email/Username:' props={{ type: 'text' }} />
+            <FormInput label='Email:' props={{ type: 'email' }} />
+            <FormInput label='Username:' props={{ type: 'text' }} />
             <FormInput label='Password:' props={{ type: 'password' }} />
+            <FormInput label='Confirm Password:'  props={{ type: 'password' }} />
             <Button
-                label='Sign in'
+                label='Create Account'
                 extraStyles='bg-highlight text-light-gray hover:bg-highlight-dark transition duration-100 ease'
             />
             <OptionsDivider />
             <Button
-                label='Sign In With Google'
+                label='Sign Up With Google'
                 extraStyles='bg-white text-black hover:bg-light-gray transition duration-100 ease'
             >
                 <div className='absolute left-4 flex items-center'>
@@ -34,4 +36,4 @@ const LoginForm = () => {
     )
 }
 
-export default LoginForm
+export default RegisterForm
