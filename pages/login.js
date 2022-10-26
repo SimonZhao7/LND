@@ -40,6 +40,7 @@ const Login = () => {
                     alt='login photo'
                     className='absolute opacity-50'
                     layout={'fill'}
+                    priority={true}
                     objectFit='cover'
                 />
             </motion.div>

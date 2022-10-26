@@ -1,26 +1,81 @@
 import Image from 'next/image'
-import React from 'react'
+import React, { useState } from 'react'
 // Components
 import FormInput from './FormInput'
 import Button from './Button'
 import OptionsDivider from './OptionsDivider'
 // Assets
 import googleLogo from '../assets/google.png'
+// Redux
+import { useDispatch, useSelector } from 'react-redux'
+import { regsiterUser } from '../redux/features/user'
 
 const RegisterForm = () => {
+    const [email, setEmail] = useState('')
+    const [username, setUsername] = useState('')
+    const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const { user, error, loading } = useSelector((state) => state.user)
+    const dispatch = useDispatch()
+
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        dispatch(regsiterUser({ email, username, password, confirmPassword }))
+        if (user) {
+            // redirect
+        }
+    }
+
     return (
-        <form className='w-full space-y-4'>
-            <FormInput label='Email:' props={{ type: 'email' }} />
-            <FormInput label='Username:' props={{ type: 'text' }} />
-            <FormInput label='Password:' props={{ type: 'password' }} />
-            <FormInput label='Confirm Password:'  props={{ type: 'password' }} />
+        <form className='w-full space-y-4' onSubmit={handleSubmit}>
+            {error && (
+                <div className=' p-5 rounded-md bg-highlight text-white text-xl'>
+                    {error.error}
+                </div>
+            )}
+            <FormInput
+                label='Email:'
+                props={{
+                    type: 'email',
+                    onChange: (e) => setEmail(e.target.value),
+                }}
+                hasError={error && error.location == 0}
+            />
+            <FormInput
+                label='Username:'
+                props={{
+                    type: 'text',
+                    onChange: (e) => setUsername(e.target.value),
+                }}
+                hasError={error && error.location == 1}
+            />
+            <FormInput
+                label='Password:'
+                props={{
+                    type: 'password',
+                    onChange: (e) => setPassword(e.target.value),
+                    autoComplete: 'on',
+                }}
+                hasError={error && error.location == 2}
+            />
+            <FormInput
+                label='Confirm Password:'
+                props={{
+                    type: 'password',
+                    onChange: (e) => setConfirmPassword(e.target.value),
+                    autoComplete: 'on',
+                }}
+                hasError={error && error.location == 3}
+            />
             <Button
                 label='Create Account'
+                loading={loading}
                 extraStyles='bg-highlight text-light-gray hover:bg-highlight-dark transition duration-100 ease'
             />
             <OptionsDivider />
             <Button
                 label='Sign Up With Google'
+                props={{ type: 'submit' }}
                 extraStyles='bg-white text-black hover:bg-light-gray transition duration-100 ease'
             >
                 <div className='absolute left-4 flex items-center'>

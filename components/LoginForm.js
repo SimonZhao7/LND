@@ -11,7 +11,10 @@ const LoginForm = () => {
     return (
         <form className='w-full space-y-4'>
             <FormInput label='Email/Username:' props={{ type: 'text' }} />
-            <FormInput label='Password:' props={{ type: 'password' }} />
+            <FormInput
+                label='Password:'
+                props={{ type: 'password', autoComplete: 'on' }}
+            />
             <Button
                 label='Sign in'
                 extraStyles='bg-highlight text-light-gray hover:bg-highlight-dark transition duration-100 ease'
