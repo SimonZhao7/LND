@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import FormInput from './FormInput'
 import Button from './Button'
 import OptionsDivider from './OptionsDivider'
+import Alert from './Alert'
 // Assets
 import googleLogo from '../assets/google.png'
 // Redux
@@ -29,9 +30,7 @@ const RegisterForm = () => {
     return (
         <form className='w-full space-y-4' onSubmit={handleSubmit}>
             {error && (
-                <div className=' p-5 rounded-md bg-highlight text-white text-xl'>
-                    {error.error}
-                </div>
+                <Alert message={error.error} />
             )}
             <FormInput
                 label='Email:'

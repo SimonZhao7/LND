@@ -1,7 +1,10 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 // Firebase Auth
 import { auth } from '../../firebase'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+} from 'firebase/auth'
 // Firebase DB
 import { db } from '../../firebase'
 import {
@@ -9,6 +12,7 @@ import {
     query,
     where,
     getDocs,
+    getDoc,
     doc,
     setDoc,
 } from 'firebase/firestore'
@@ -24,7 +28,7 @@ export const regsiterUser = createAsyncThunk(
     async (body, { rejectWithValue }) => {
         const { email, username, password, confirmPassword } = body
         // Empty Params
-        if (!email) 
+        if (!email)
             return rejectWithValue({
                 error: 'You have not provided an email address',
                 location: 0,
@@ -46,7 +50,7 @@ export const regsiterUser = createAsyncThunk(
             })
         if (password != confirmPassword)
             return rejectWithValue({
-                error: 'Passwords don\'t match',
+                error: "Passwords don't match",
                 location: 3,
             })
         // Existing Values
@@ -71,12 +75,56 @@ export const regsiterUser = createAsyncThunk(
             await setDoc(doc(db, 'users', uid), {
                 username: username,
                 profilePicture: '',
+                email,
             })
 
-            return userCredentials.user
+            return await getDoc(doc(db, 'users', userCredentials.user.uid)).data()
         } catch (e) {
-            console.log(e)
             rejectWithValue(e)
+        }
+    }
+)
+
+export const loginUser = createAsyncThunk(
+    'user/loginUser',
+    async (body, { rejectWithValue }) => {
+        // Email may also be username
+        const { email, password } = body
+
+        try {
+            const userCredentials = await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            )
+
+            const user = await getDoc(doc(db, 'users', userCredentials.user.uid))
+            return user.data()
+        } catch (e) {
+            if (e.code === 'auth/wrong-password') {
+                return rejectWithValue({ error: 'Incorrect Login Credentials' })
+            }
+
+            const userSnapshot = await getDocs(
+                query(
+                    collection(db, 'users'),
+                    where('username', '==', email)
+                )
+            )
+
+            if (userSnapshot.empty) {
+                return rejectWithValue({ error: 'Incorrect Login Credentials' })
+            }
+            
+            const userEmail = userSnapshot.docs[0].data().email
+
+            try {
+                const userCredentials = await signInWithEmailAndPassword(auth, userEmail, password)
+                const user = await getDoc(doc(db, 'users', userCredentials.user.uid))
+                return user.data()
+            } catch (e) {
+                return rejectWithValue({ error: 'Incorrect Login Credentials' })
+            }
         }
     }
 )
@@ -89,7 +137,6 @@ const userSlice = createSlice({
             state.loading = true
         },
         [regsiterUser.rejected]: (state, action) => {
-            console.log(action)
             state.error = action.payload
             state.loading = false
         },
@@ -97,8 +144,20 @@ const userSlice = createSlice({
             state.user = action.payload
             state.error = null
             state.loading = false
+        },
+        [loginUser.pending]: (state) => {
+            state.loading = true
+        },
+        [loginUser.fulfilled]: (state, action) => {
+            state.user = action.payload
+            state.error = null
+            state.loading = false
+        },
+        [loginUser.rejected]: (state, action) => {
+            state.error = action.payload
+            state.loading = false
         }
-    }
+    },
 })
 
 export default userSlice.reducer
