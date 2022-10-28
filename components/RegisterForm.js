@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 import React, { useState } from 'react'
 // Components
 import FormInput from './FormInput'
@@ -9,7 +10,10 @@ import Alert from './Alert'
 import googleLogo from '../assets/google.png'
 // Redux
 import { useDispatch, useSelector } from 'react-redux'
-import { regsiterUser } from '../redux/features/user'
+import { regsiterUser, googleLogin } from '../redux/features/user'
+// Firebase
+import { auth } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 
 const RegisterForm = () => {
     const [email, setEmail] = useState('')
@@ -17,21 +21,23 @@ const RegisterForm = () => {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const { user, error, loading } = useSelector((state) => state.user)
+    const router = useRouter()
     const dispatch = useDispatch()
 
     const handleSubmit = (e) => {
         e.preventDefault()
         dispatch(regsiterUser({ email, username, password, confirmPassword }))
-        if (user) {
-            // redirect
-        }
     }
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            router.push('/loggedin')
+        }
+    })
 
     return (
         <form className='w-full space-y-4' onSubmit={handleSubmit}>
-            {error && (
-                <Alert message={error.error} />
-            )}
+            {error && <Alert message={error.error} />}
             <FormInput
                 label='Email:'
                 props={{
@@ -68,13 +74,17 @@ const RegisterForm = () => {
             />
             <Button
                 label='Create Account'
+                props={{ type: 'submit' }}
                 loading={loading}
                 extraStyles='bg-highlight text-light-gray hover:bg-highlight-dark transition duration-100 ease'
             />
             <OptionsDivider />
             <Button
                 label='Sign Up With Google'
-                props={{ type: 'submit' }}
+                props={{
+                    type: 'button',
+                    onClick: () => dispatch(googleLogin()),
+                }}
                 extraStyles='bg-white text-black hover:bg-light-gray transition duration-100 ease'
             >
                 <div className='absolute left-4 flex items-center'>

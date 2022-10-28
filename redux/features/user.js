@@ -1,9 +1,11 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 // Firebase Auth
-import { auth } from '../../firebase'
+import { auth, googleProvider } from '../../firebase'
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
+    signInWithPopup,
+    sendEmailVerification,
 } from 'firebase/auth'
 // Firebase DB
 import { db } from '../../firebase'
@@ -69,6 +71,7 @@ export const regsiterUser = createAsyncThunk(
                 email,
                 password
             )
+            sendEmailVerification(auth.currentUser)
             const user = userCredentials.user
             const uid = user.uid
 
@@ -78,9 +81,16 @@ export const regsiterUser = createAsyncThunk(
                 email,
             })
 
-            return await getDoc(doc(db, 'users', userCredentials.user.uid)).data()
+            return (await getDoc(
+                doc(db, 'users', userCredentials.user.uid)
+            )).data()
         } catch (e) {
-            rejectWithValue(e)
+            if (e.code === 'auth/email-already-in-use')
+                return rejectWithValue({
+                    error: 'A user already exists with the provided email',
+                    location: 0,
+                })
+            return rejectWithValue(e.request.data)
         }
     }
 )
@@ -98,7 +108,9 @@ export const loginUser = createAsyncThunk(
                 password
             )
 
-            const user = await getDoc(doc(db, 'users', userCredentials.user.uid))
+            const user = await getDoc(
+                doc(db, 'users', userCredentials.user.uid)
+            )
             return user.data()
         } catch (e) {
             if (e.code === 'auth/wrong-password') {
@@ -106,21 +118,24 @@ export const loginUser = createAsyncThunk(
             }
 
             const userSnapshot = await getDocs(
-                query(
-                    collection(db, 'users'),
-                    where('username', '==', email)
-                )
+                query(collection(db, 'users'), where('username', '==', email))
             )
 
             if (userSnapshot.empty) {
                 return rejectWithValue({ error: 'Incorrect Login Credentials' })
             }
-            
+
             const userEmail = userSnapshot.docs[0].data().email
 
             try {
-                const userCredentials = await signInWithEmailAndPassword(auth, userEmail, password)
-                const user = await getDoc(doc(db, 'users', userCredentials.user.uid))
+                const userCredentials = await signInWithEmailAndPassword(
+                    auth,
+                    userEmail,
+                    password
+                )
+                const user = await getDoc(
+                    doc(db, 'users', userCredentials.user.uid)
+                )
                 return user.data()
             } catch (e) {
                 return rejectWithValue({ error: 'Incorrect Login Credentials' })
@@ -129,9 +144,23 @@ export const loginUser = createAsyncThunk(
     }
 )
 
+export const googleLogin = createAsyncThunk('user/googleAuth', async () => {
+    try {
+        const userCredentials = await signInWithPopup(auth, googleProvider)
+        return (await getDoc(doc(db, 'users', userCredentials.user.uid))).data()
+    } catch (e) {
+        rejectWithValue({ error: 'An unknown error occurred' })
+    }
+})
+
 const userSlice = createSlice({
     name: 'user',
     initialState,
+    reducers: {
+        clearErrors: (state) => {
+            state.error = null
+        }
+    },
     extraReducers: {
         [regsiterUser.pending]: (state) => {
             state.loading = true
@@ -156,8 +185,14 @@ const userSlice = createSlice({
         [loginUser.rejected]: (state, action) => {
             state.error = action.payload
             state.loading = false
-        }
+        },
+        [googleLogin.fulfilled]: (state, action) => {
+            state.error = null
+            state.user = action.payload
+        },
     },
 })
+
+export const { clearErrors } = userSlice.actions
 
 export default userSlice.reducer

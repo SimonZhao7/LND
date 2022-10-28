@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 import React, { useState } from 'react'
 // Components
 import FormInput from './FormInput'
@@ -9,28 +10,32 @@ import Alert from './Alert'
 import googleLogo from '../assets/google.png'
 // Redux
 import { useSelector, useDispatch } from 'react-redux'
-import { loginUser } from '../redux/features/user'
+import { loginUser, googleLogin } from '../redux/features/user'
+// Firebase
+import { auth } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 
 const LoginForm = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const { error, loading, user } = useSelector((state) => state.user)
+    const router = useRouter()
     const dispatch = useDispatch()
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            router.push('/loggedin')
+        }
+    })
 
     const handleSubmit = (e) => {
         e.preventDefault()
         dispatch(loginUser({ email, password }))
-
-        if (user) {
-            
-        }
     }
 
     return (
         <form className='w-full space-y-4' onSubmit={handleSubmit}>
-            {error && 
-                <Alert message={error.error} />
-            }
+            {error && <Alert message={error.error} />}
             <FormInput
                 label='Email/Username:'
                 props={{
@@ -58,6 +63,7 @@ const LoginForm = () => {
             <Button
                 label='Sign In With Google'
                 extraStyles='bg-white text-black hover:bg-light-gray transition duration-100 ease'
+                props={{ onClick: () => dispatch(googleLogin()), type: 'button' }}
             >
                 <div className='absolute left-4 flex items-center'>
                     <Image

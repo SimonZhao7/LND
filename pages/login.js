@@ -11,10 +11,14 @@ import registerPhoto from '../assets/registerPhoto.jpg'
 import { motion } from 'framer-motion'
 // Hooks
 import { useMediaQuery } from '../hooks/useMediaQuery'
+// Redux
+import { useDispatch } from 'react-redux'
+import { clearErrors } from '../redux/features/user'
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true)
     const screenLg = useMediaQuery('(min-width: 1024px)')
+    const dispatch = useDispatch()
 
     const formVariants = screenLg
         ? { login: { x: '100%' }, register: { x: '0%' } }
@@ -76,7 +80,10 @@ const Login = () => {
                             </div>
                             <p
                                 className='hover:underline cursor-pointer'
-                                onClick={() => setIsLogin(false)}
+                                onClick={() => {
+                                    setIsLogin(false)
+                                    dispatch(clearErrors())
+                                }}
                             >
                                 Don't have an account?
                             </p>
@@ -87,7 +94,10 @@ const Login = () => {
                         <RegisterForm />
                         <p
                             className='mt-4 text-light-gray cursor-pointer hover:underline text-right 2xl:text-xl'
-                            onClick={() => setIsLogin(true)}
+                            onClick={() => { 
+                                setIsLogin(true)
+                                dispatch(clearErrors())
+                            }}
                         >
                             Already have an account?
                         </p>
