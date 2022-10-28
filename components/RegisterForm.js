@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import { useRouter } from 'next/router'
 import React, { useState } from 'react'
 // Components
 import FormInput from './FormInput'
@@ -11,9 +10,6 @@ import googleLogo from '../assets/google.png'
 // Redux
 import { useDispatch, useSelector } from 'react-redux'
 import { regsiterUser, googleLogin } from '../redux/features/user'
-// Firebase
-import { auth } from '../firebase'
-import { onAuthStateChanged } from 'firebase/auth'
 
 const RegisterForm = () => {
     const [email, setEmail] = useState('')
@@ -21,19 +17,12 @@ const RegisterForm = () => {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const { user, error, loading } = useSelector((state) => state.user)
-    const router = useRouter()
     const dispatch = useDispatch()
 
     const handleSubmit = (e) => {
         e.preventDefault()
         dispatch(regsiterUser({ email, username, password, confirmPassword }))
     }
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            router.push('/loggedin')
-        }
-    })
 
     return (
         <form className='w-full space-y-4' onSubmit={handleSubmit}>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 import React, { useState } from 'react'
 // Components
 import RegisterForm from '../components/RegisterForm'
@@ -14,11 +15,21 @@ import { useMediaQuery } from '../hooks/useMediaQuery'
 // Redux
 import { useDispatch } from 'react-redux'
 import { clearErrors } from '../redux/features/user'
+// Firebase
+import { auth } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true)
     const screenLg = useMediaQuery('(min-width: 1024px)')
+    const router = useRouter()
     const dispatch = useDispatch()
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            router.push('/loggedin')
+        }
+    })
 
     const formVariants = screenLg
         ? { login: { x: '100%' }, register: { x: '0%' } }
