@@ -6,6 +6,8 @@ import {
     signInWithEmailAndPassword,
     signInWithPopup,
     sendEmailVerification,
+    linkWithCredential,
+    EmailAuthProvider,
 } from 'firebase/auth'
 // Firebase DB
 import { db } from '../../firebase'
@@ -27,8 +29,10 @@ const initialState = {
 
 export const regsiterUser = createAsyncThunk(
     'users/register',
-    async (body, { rejectWithValue }) => {
-        const { email, username, password, confirmPassword } = body
+    async (
+        { email, username, password, confirmPassword },
+        { rejectWithValue }
+    ) => {
         // Empty Params
         if (!email)
             return rejectWithValue({
@@ -81,9 +85,9 @@ export const regsiterUser = createAsyncThunk(
                 email,
             })
 
-            return (await getDoc(
-                doc(db, 'users', userCredentials.user.uid)
-            )).data()
+            return (
+                await getDoc(doc(db, 'users', userCredentials.user.uid))
+            ).data()
         } catch (e) {
             if (e.code === 'auth/email-already-in-use')
                 return rejectWithValue({
@@ -97,10 +101,8 @@ export const regsiterUser = createAsyncThunk(
 
 export const loginUser = createAsyncThunk(
     'user/loginUser',
-    async (body, { rejectWithValue }) => {
+    async ({ email, password }, { rejectWithValue }) => {
         // Email may also be username
-        const { email, password } = body
-
         try {
             const userCredentials = await signInWithEmailAndPassword(
                 auth,
@@ -147,11 +149,82 @@ export const loginUser = createAsyncThunk(
 export const googleLogin = createAsyncThunk('user/googleAuth', async () => {
     try {
         const userCredentials = await signInWithPopup(auth, googleProvider)
-        return (await getDoc(doc(db, 'users', userCredentials.user.uid))).data()
+        const user = await getDoc(doc(db, 'users', userCredentials.user.uid))
+        if (user.exists()) {
+            return user.data()
+        }
+        return {}
     } catch (e) {
         rejectWithValue({ error: 'An unknown error occurred' })
     }
 })
+
+// assert email doesn't have a document
+export const linkEmailAccount = createAsyncThunk(
+    'user/linkEmail',
+    async ({ username, password, confirmPassword }, { rejectWithValue }) => {
+        if (!username)
+            return rejectWithValue({
+                error: 'You have not provided a username',
+                location: 0,
+            })
+        if (!password)
+            return rejectWithValue({
+                error: 'You have not proivded a password',
+                location: 1,
+            })
+        if (!confirmPassword)
+            return rejectWithValue({
+                error: 'You need to retype to confirm your password',
+                location: 2,
+            })
+
+        if (password !== confirmPassword) {
+            return rejectWithValue({
+                error: "Passwords don't match",
+                location: 2,
+            })
+        }
+
+        const users = await getDocs(
+            query(collection(db, 'users'), where('username', '==', username))
+        )
+
+        if (!users.empty) {
+            return rejectWithValue({
+                error: 'Username already exists',
+                location: 0,
+            })
+        }
+
+        await setDoc(doc(db, 'users', auth.currentUser.uid), {
+            username: username,
+            profilePicture: '',
+            email: auth.currentUser.email,
+        })
+
+        const credential = EmailAuthProvider.credential(
+            auth.currentUser.email,
+            password
+        )
+
+        await linkWithCredential(auth.currentUser, credential)
+
+        const user = await getDoc(doc(db, 'users', auth.currentUser.uid))
+        return user.data()
+    }
+)
+
+export const fetchUser = createAsyncThunk(
+    'user/fetchUser',
+    async (email) => {
+        const users = await getDocs(
+            query(collection(db, 'users'), where('email', '==', email))
+        )
+        if (users.empty) return {}
+        return users.docs[0].data()
+    }
+)
 
 const userSlice = createSlice({
     name: 'user',
@@ -159,7 +232,7 @@ const userSlice = createSlice({
     reducers: {
         clearErrors: (state) => {
             state.error = null
-        }
+        },
     },
     extraReducers: {
         [regsiterUser.pending]: (state) => {
@@ -188,6 +261,25 @@ const userSlice = createSlice({
         },
         [googleLogin.fulfilled]: (state, action) => {
             state.error = null
+            state.user = action.payload
+        },
+        [linkEmailAccount.pending]: (state) => {
+            state.loading = true
+        },
+        [linkEmailAccount.rejected]: (state, action) => {
+            state.error = action.payload
+            state.loading = false
+        },
+        [linkEmailAccount.fulfilled]: (state, action) => {
+            state.user = action.payload
+            state.error = null
+            state.loading = false
+        },
+        [fetchUser.pending]: (state) => {
+            state.loading = true
+        },
+        [fetchUser.fulfilled]: (state, action) => {
+            state.loading = false
             state.user = action.payload
         },
     },

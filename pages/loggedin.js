@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 // Components
 import Button from '../components/Button'
 // Firebase
-import { signOut } from 'firebase/auth'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '../firebase'
 
 const LoggedIn = () => {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        if (!auth.currentUser) {
+    onAuthStateChanged(auth, user => {
+        if (!user) {
             router.push('/login')
             return
         }
         setLoading(false)
-    }, [])
+    })
 
     return (
         <>
@@ -27,7 +27,6 @@ const LoggedIn = () => {
                         props={{
                             onClick: () => {
                                 signOut(auth)
-                                router.push('/login')
                             },
                         }}
                         extraStyles={'bg-highlight text-white max-w-2xl mx-auto'}

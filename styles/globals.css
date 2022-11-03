@@ -11,3 +11,13 @@
     @apply bg-background;
   }
 }
+
+@layer base {
+  .register-sizing {
+    @apply max-w-xl 2xl:max-w-none w-full mx-auto;
+  }
+
+  .register-legend {
+    @apply text-4xl text-light-gray mb-8 text-center 2xl:text-5xl font-nunito;
+  }
+}

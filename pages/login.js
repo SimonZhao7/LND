@@ -27,7 +27,7 @@ const Login = () => {
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            router.push('/loggedin')
+            router.push(`/setup?email=${user.email}`)
         }
     })
 
@@ -79,11 +79,11 @@ const Login = () => {
                 initial={formVariants.login}
                 transition={{ duration: screenLg ? 0.75 : 0 }}
             >
-                <h1 className='text-4xl text-light-gray mb-8 text-center 2xl:text-5xl font-nunito'>
+                <legend className='register-legend'>
                     {isLogin ? 'Login to LND' : 'Sign up to LND'}
-                </h1>
+                </legend>
                 {isLogin ? (
-                    <div className='max-w-xl 2xl:max-w-none w-full mx-auto'>
+                    <div className='register-sizing'>
                         <LoginForm />
                         <div className='flex items-center justify-between mt-4 text-light-gray 2xl:text-xl'>
                             <div className='hover:underline'>
@@ -105,7 +105,7 @@ const Login = () => {
                         <RegisterForm />
                         <p
                             className='mt-4 text-light-gray cursor-pointer hover:underline text-right 2xl:text-xl'
-                            onClick={() => { 
+                            onClick={() => {
                                 setIsLogin(true)
                                 dispatch(clearErrors())
                             }}
