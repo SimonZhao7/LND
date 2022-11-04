@@ -65,7 +65,7 @@ const RegisterForm = () => {
                 label='Create Account'
                 props={{ type: 'submit' }}
                 loading={loading}
-                extraStyles='bg-highlight text-light-gray hover:bg-highlight-dark transition duration-100 ease'
+                extraStyles='purple-btn'
             />
             <OptionsDivider />
             <Button

@@ -46,7 +46,7 @@ const LoginForm = () => {
                 label='Sign in'
                 props={{ type: 'submit' }}
                 loading={loading}
-                extraStyles='bg-highlight text-light-gray hover:bg-highlight-dark transition duration-100 ease'
+                extraStyles='purple-btn'
             />
             <OptionsDivider />
             <Button

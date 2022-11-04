@@ -20,4 +20,8 @@
   .register-legend {
     @apply text-4xl text-light-gray mb-8 text-center 2xl:text-5xl font-nunito;
   }
+  
+  .purple-btn {
+    @apply bg-highlight text-light-gray hover:bg-highlight-dark transition duration-100 ease-out;
+  }
 }

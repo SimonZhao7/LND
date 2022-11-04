@@ -70,7 +70,7 @@ const FinishSetupForm = () => {
                     label={'Create Account'}
                     props={{ type: 'submit' }}
                     loading={loading}
-                    extraStyles='bg-highlight text-white hover:bg-highlight-dark transition-color duration-100'
+                    extraStyles='purple-btn'
                 />
             </form>
         </div>

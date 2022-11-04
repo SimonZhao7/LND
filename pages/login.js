@@ -26,8 +26,14 @@ const Login = () => {
     const dispatch = useDispatch()
 
     onAuthStateChanged(auth, (user) => {
+        if (user && !user.emailVerified) {
+            router.push('/verify')
+            return
+        }
+
         if (user) {
             router.push(`/setup?email=${user.email}`)
+            return
         }
     })
 
